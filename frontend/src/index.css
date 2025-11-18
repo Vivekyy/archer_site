@@ -16,3 +16,14 @@
     @apply text-inherit;
   }
 }
+
+@layer utilities {
+  .shimmer-text {
+    background-size: 200% auto;
+    transition: background-position 0.8s ease;
+  }
+
+  .group:hover .shimmer-text {
+    background-position: 100% center;
+  }
+}

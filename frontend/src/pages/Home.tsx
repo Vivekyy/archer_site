@@ -1,9 +1,22 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faKeyboard,
+  faChartLine,
+  faUsers,
+  faLink,
+} from "@fortawesome/free-solid-svg-icons";
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import consoleMockup from "../assets/mockup.png";
+import bridgeLogo from "../assets/bridge.png";
+import kilnLogo from "../assets/kiln.png";
+import archerLogo from "../assets/archer-logo.svg";
 
 type Pillar = {
   title: string;
   copy: string;
+  icon: IconDefinition;
 };
 
 type ProofPoint = {
@@ -20,6 +33,7 @@ type WorkflowMoment = {
 type Integration = {
   name: string;
   detail: string;
+  logo: string;
 };
 
 const heroHighlights: string[] = [
@@ -33,18 +47,22 @@ const pillars: Pillar[] = [
   {
     title: "Prompt Console",
     copy: "Program treasury, payroll, and vendor workflows with plain English prompts. Archer translates intent into compliant, auditable smart instructions.",
+    icon: faKeyboard,
   },
   {
     title: "Programmable Treasury",
     copy: "Route idle balances into yield, automate liquidity buffers, or set policy-based guardrails while keeping CFOs in full control.",
+    icon: faChartLine,
   },
   {
     title: "Employee Ecosystem",
     copy: "Give every teammate a non-custodial account that syncs with payroll, expenses, and KPIs. Employees use Archer just like their traditional bank account.",
+    icon: faUsers,
   },
   {
     title: "TradFi + DeFi Rails",
     copy: "Bridge ACH, wires, and corporate cards with stablecoin speed. Settlement windows shrink from days to seconds.",
+    icon: faLink,
   },
 ];
 
@@ -85,14 +103,17 @@ const integrations: Integration[] = [
   {
     name: "Bridge.xyz",
     detail: "Card issuance, compliance, and on/off-ramping",
+    logo: bridgeLogo,
   },
   {
     name: "Kiln.fi",
     detail: "5–10% yield on idle stablecoin balances",
+    logo: kilnLogo,
   },
   {
-    name: "Agentic SDK",
+    name: "Archer SDK",
     detail: "APIs that let trusted AI agents move money safely",
+    logo: archerLogo,
   },
 ];
 
@@ -100,6 +121,67 @@ function Home() {
   useEffect(() => {
     document.title = "Archer | Home";
   }, []);
+
+  const [highlightIndex, setHighlightIndex] = useState(0);
+  const [isHighlightFading, setIsHighlightFading] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const heroCardRef = useRef<HTMLDivElement | null>(null);
+
+  const startHighlightCycle = useCallback(() => {
+    if (intervalRef.current) return;
+    intervalRef.current = setInterval(() => {
+      setIsHighlightFading(true);
+      fadeTimeoutRef.current = setTimeout(() => {
+        setHighlightIndex((prev) => (prev + 1) % heroHighlights.length);
+        setIsHighlightFading(false);
+      }, 500);
+    }, 4500);
+  }, []);
+
+  const stopHighlightCycle = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (fadeTimeoutRef.current) {
+      clearTimeout(fadeTimeoutRef.current);
+      fadeTimeoutRef.current = null;
+    }
+  }, []);
+
+  const resumeCycle = useCallback(() => {
+    if (isPaused) {
+      setIsPaused(false);
+    }
+    startHighlightCycle();
+  }, [isPaused, startHighlightCycle]);
+
+  useEffect(() => {
+    startHighlightCycle();
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (heroCardRef.current && !heroCardRef.current.contains(event.target as Node)) {
+        resumeCycle();
+      }
+    };
+    document.addEventListener("click", handleDocumentClick);
+
+    return () => {
+      stopHighlightCycle();
+      document.removeEventListener("click", handleDocumentClick);
+    };
+  }, [resumeCycle, startHighlightCycle, stopHighlightCycle]);
+
+  const setHighlightManually = (index: number) => {
+    stopHighlightCycle();
+    setIsPaused(true);
+    setIsHighlightFading(true);
+    setTimeout(() => {
+      setHighlightIndex(index);
+      setIsHighlightFading(false);
+    }, 500);
+  };
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-16">
@@ -115,16 +197,27 @@ function Home() {
           financial operations for businesses. Launch autonomous workflows,
           settle in seconds, and unify TradFi access with DeFi performance.
         </p>
-        <ul className="grid gap-3 md:grid-cols-2">
-          {heroHighlights.map((item) => (
-            <li
-              key={item}
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-archer-white"
-            >
-              {item}
-            </li>
-          ))}
-        </ul>
+        <div
+          ref={heroCardRef}
+          className="rounded-3xl border border-white/10 bg-white/5 px-6 py-6 text-base md:text-lg font-medium text-archer-white shadow-card"
+        >
+          <p className={`transition-opacity duration-500 ${isHighlightFading ? "opacity-0" : "opacity-100"}`}>
+            {heroHighlights[highlightIndex]}
+          </p>
+          <nav className="mt-4 flex gap-2">
+            {heroHighlights.map((_, idx) => (
+              <button
+                type="button"
+                key={idx}
+                onClick={() => setHighlightManually(idx)}
+                className={`h-1.5 flex-1 rounded-full bg-white/20 transition-colors ${
+                  idx === highlightIndex ? "bg-white" : "hover:bg-white/60"
+                }`}
+                aria-label={`Show highlight ${idx + 1}`}
+              />
+            ))}
+          </nav>
+        </div>
       </section>
 
       <section className="flex flex-col gap-4">
@@ -138,9 +231,17 @@ function Home() {
           {pillars.map((pillar) => (
             <article
               key={pillar.title}
-              className="rounded-3xl border border-white/10 bg-archer-dark/60 p-6 shadow-card"
+              className="rounded-3xl border border-white/10 bg-archer-dark/60 p-6 shadow-card transition-transform duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_25px_45px_rgba(8,6,24,0.6)]"
             >
-              <h3 className="text-xl font-semibold">{pillar.title}</h3>
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
+                  <FontAwesomeIcon
+                    icon={pillar.icon}
+                    className="text-archer-white text-xl"
+                  />
+                </div>
+                <h3 className="text-xl font-semibold">{pillar.title}</h3>
+              </div>
               <p className="mt-3 text-sm text-archer-gray">{pillar.copy}</p>
             </article>
           ))}
@@ -159,9 +260,9 @@ function Home() {
           {proofPoints.map((point) => (
             <article
               key={point.label}
-              className="rounded-2xl border border-white/10 bg-white/5 p-5"
+              className="group rounded-2xl border border-white/10 bg-white/5 p-5 transition-colors"
             >
-              <span className="bg-gradient-to-r from-archer-purple to-archer-lilac bg-clip-text text-3xl font-bold text-transparent">
+              <span className="shimmer-text bg-gradient-to-r from-archer-purple via-white to-archer-lilac bg-clip-text text-3xl font-bold text-transparent">
                 {point.stat}
               </span>
               <h3 className="mt-2 text-lg font-semibold">{point.label}</h3>
@@ -171,7 +272,7 @@ function Home() {
         </div>
       </section>
 
-      <section className="grid gap-6 md:grid-cols-2">
+      <section className="flex flex-col gap-6">
         <div>
           <h2 className="text-3xl font-semibold">Workflow superpowers</h2>
           <p className="text-archer-gray">
@@ -179,16 +280,31 @@ function Home() {
             so finance teams stay confident.
           </p>
         </div>
-        <div className="flex flex-col gap-4">
-          {workflowMoments.map((moment) => (
-            <article
-              key={moment.title}
-              className="rounded-2xl border border-white/5 bg-archer-dark/60 p-4"
-            >
-              <h3 className="text-lg font-semibold">{moment.title}</h3>
-              <p className="text-sm text-archer-gray">{moment.copy}</p>
-            </article>
-          ))}
+        <div className="grid gap-6 md:grid-cols-2 items-start">
+          <div className="rounded-[32px] border border-white/10 bg-archer-dark/60 p-2 shadow-card">
+            <div className="rounded-[28px] bg-gradient-to-br from-white/10 to-white/5 p-4">
+              <img
+                src={consoleMockup}
+                alt="Archer prompt console mockup"
+                className="w-full rounded-3xl border border-white/10 object-cover"
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-4">
+            {workflowMoments.map((moment) => (
+              <article
+                key={moment.title}
+                className="group rounded-2xl border border-white/5 bg-archer-dark/60 p-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/20 hover:bg-archer-dark/80 hover:shadow-[0_20px_35px_rgba(6,4,18,0.6)]"
+              >
+                <h3 className="text-lg font-semibold transition-all duration-300 group-hover:text-xl group-hover:mb-1">
+                  {moment.title}
+                </h3>
+                <p className="text-sm text-archer-gray transition-all duration-300">
+                  {moment.copy}
+                </p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -206,12 +322,23 @@ function Home() {
           {integrations.map((item) => (
             <li
               key={item.name}
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-5"
+              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-6"
             >
-              <strong className="block text-lg font-semibold">
-                {item.name}
-              </strong>
-              <span className="text-sm text-archer-gray">{item.detail}</span>
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/90 p-2">
+                  <img
+                    src={item.logo}
+                    alt={`${item.name} logo`}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+                <strong className="text-lg font-semibold text-archer-white">
+                  {item.name}
+                </strong>
+              </div>
+              <span className="block text-sm text-archer-gray">
+                {item.detail}
+              </span>
             </li>
           ))}
         </ul>
