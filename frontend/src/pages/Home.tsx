@@ -34,6 +34,7 @@ type Integration = {
   name: string;
   detail: string;
   logo: string;
+  url: string;
 };
 
 const heroHighlights: string[] = [
@@ -104,16 +105,19 @@ const integrations: Integration[] = [
     name: "Bridge.xyz",
     detail: "Card issuance, compliance, and on/off-ramping",
     logo: bridgeLogo,
+    url: "https://www.bridge.xyz",
   },
   {
     name: "Kiln.fi",
     detail: "5–10% yield on idle stablecoin balances",
     logo: kilnLogo,
+    url: "https://www.kiln.fi",
   },
   {
     name: "Archer SDK",
     detail: "APIs that let trusted AI agents move money safely",
     logo: archerLogo,
+    url: "https://archer.xyz",
   },
 ];
 
@@ -161,7 +165,10 @@ function Home() {
   useEffect(() => {
     startHighlightCycle();
     const handleDocumentClick = (event: MouseEvent) => {
-      if (heroCardRef.current && !heroCardRef.current.contains(event.target as Node)) {
+      if (
+        heroCardRef.current &&
+        !heroCardRef.current.contains(event.target as Node)
+      ) {
         resumeCycle();
       }
     };
@@ -173,14 +180,26 @@ function Home() {
     };
   }, [resumeCycle, startHighlightCycle, stopHighlightCycle]);
 
-  const setHighlightManually = (index: number) => {
+  const setHighlightManually = (index: number, pause = true) => {
+    if (index === highlightIndex) {
+      if (!pause) {
+        stopHighlightCycle();
+      }
+      return;
+    }
     stopHighlightCycle();
-    setIsPaused(true);
-    setIsHighlightFading(true);
-    setTimeout(() => {
-      setHighlightIndex(index);
+    if (pause) {
+      setIsPaused(true);
+      setIsHighlightFading(true);
+      setTimeout(() => {
+        setHighlightIndex(index);
+        setIsHighlightFading(false);
+      }, 500);
+    } else {
+      setIsPaused(false);
       setIsHighlightFading(false);
-    }, 500);
+      setHighlightIndex(index);
+    }
   };
 
   return (
@@ -201,17 +220,23 @@ function Home() {
           ref={heroCardRef}
           className="rounded-3xl border border-white/10 bg-white/5 px-6 py-6 text-base md:text-lg font-medium text-archer-white shadow-card"
         >
-          <p className={`transition-opacity duration-500 ${isHighlightFading ? "opacity-0" : "opacity-100"}`}>
+          <p
+            className={`transition-opacity duration-500 ${
+              isHighlightFading ? "opacity-0" : "opacity-100"
+            }`}
+          >
             {heroHighlights[highlightIndex]}
           </p>
           <nav className="mt-4 flex gap-2">
             {heroHighlights.map((_, idx) => (
-              <button
-                type="button"
+              <div
                 key={idx}
-                onClick={() => setHighlightManually(idx)}
-                className={`h-1.5 flex-1 rounded-full bg-white/20 transition-colors ${
-                  idx === highlightIndex ? "bg-white" : "hover:bg-white/60"
+                onMouseEnter={() => setHighlightManually(idx, false)}
+                onMouseLeave={resumeCycle}
+                className={`h-1.5 flex-1 cursor-pointer rounded-full transition-colors ${
+                  idx === highlightIndex
+                    ? "bg-white/60"
+                    : "bg-white/20 hover:bg-white/60"
                 }`}
                 aria-label={`Show highlight ${idx + 1}`}
               />
@@ -322,23 +347,28 @@ function Home() {
           {integrations.map((item) => (
             <li
               key={item.name}
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-6"
+              className="group rounded-2xl border border-white/10 bg-white/5 px-4 py-6 transition-colors"
             >
-              <div className="mb-3 flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/90 p-2">
-                  <img
-                    src={item.logo}
-                    alt={`${item.name} logo`}
-                    className="h-full w-full object-contain"
-                  />
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col gap-3"
+              >
+                <div className="flex items-center gap-3 text-archer-white transition-colors group-hover:text-archer-purple">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/90 p-2 transition-shadow group-hover:shadow-[0_10px_25px_rgba(8,8,22,0.45)]">
+                    <img
+                      src={item.logo}
+                      alt={`${item.name} logo`}
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                  <strong className="text-lg font-semibold">{item.name}</strong>
                 </div>
-                <strong className="text-lg font-semibold text-archer-white">
-                  {item.name}
-                </strong>
-              </div>
-              <span className="block text-sm text-archer-gray">
-                {item.detail}
-              </span>
+                <span className="block text-sm text-archer-gray transition-colors group-hover:text-archer-white">
+                  {item.detail}
+                </span>
+              </a>
             </li>
           ))}
         </ul>
