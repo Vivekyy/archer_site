@@ -8,6 +8,7 @@ type TeamMember = {
   highlights: string[];
   voice: string;
   photo: string;
+  linkedin: string;
 };
 
 const teamMembers: TeamMember[] = [
@@ -15,6 +16,7 @@ const teamMembers: TeamMember[] = [
     name: "Benjamin Nguyen",
     role: "Co-founder & CEO",
     photo: benPortrait,
+    linkedin: "https://www.linkedin.com/in/benjaminnguyen206/",
     highlights: [
       "2x founder; previously COO/founding team at Absinthe Labs",
       "Scaled growth from 0 → 50+ clients with Serotonin, Hype, PayPal, Polkadot partners",
@@ -27,6 +29,7 @@ const teamMembers: TeamMember[] = [
     name: "Vivek Yanamadula",
     role: "Co-founder & CTO",
     photo: vivekPortrait,
+    linkedin: "https://www.linkedin.com/in/vivekyy/",
     highlights: [
       "Full-stack engineer at Amazon shipping consumer-scale AI products",
       "IEEE-published researcher in Quantum & AI under Dr. Ronghui Gu (CertiK founder)",
@@ -68,7 +71,14 @@ function Team() {
               />
             </div>
             <header>
-              <h2 className="text-2xl font-semibold">{member.name}</h2>
+              <a
+                href={member.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-2xl font-semibold text-archer-white transition-colors duration-300 hover:text-archer-purple"
+              >
+                {member.name}
+              </a>
               <p className="text-sm uppercase tracking-widest text-archer-gray">
                 {member.role}
               </p>

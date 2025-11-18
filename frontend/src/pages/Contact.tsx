@@ -16,7 +16,10 @@ function Contact() {
       </section>
       <section className="rounded-3xl border border-white/10 bg-white/5 p-8">
         <p className="text-sm uppercase tracking-widest text-archer-gray">Email us anytime</p>
-        <a className="mt-4 block text-2xl font-semibold text-archer-white" href="mailto:ben@archer-labs.xyz">
+        <a
+          className="mt-4 block text-2xl font-semibold text-archer-white transition-colors duration-300 hover:text-archer-purple"
+          href="mailto:ben@archer-labs.xyz"
+        >
           ben@archer-labs.xyz
         </a>
         <p className="mt-4 text-sm text-archer-gray">
