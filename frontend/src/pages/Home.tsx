@@ -105,19 +105,19 @@ const integrations: Integration[] = [
     name: "Bridge.xyz",
     detail: "Card issuance, compliance, and on/off-ramping",
     logo: bridgeLogo,
-    url: "https://www.bridge.xyz",
+    url: "https://www.bridge.xyz/",
   },
   {
     name: "Kiln.fi",
     detail: "5–10% yield on idle stablecoin balances",
     logo: kilnLogo,
-    url: "https://www.kiln.fi",
+    url: "https://www.kiln.fi/",
   },
   {
     name: "Archer SDK",
     detail: "APIs that let trusted AI agents move money safely",
     logo: archerLogo,
-    url: "https://archer.xyz",
+    url: "https://archer-labs.xyz/",
   },
 ];
 
@@ -365,7 +365,7 @@ function Home() {
                   </div>
                   <strong className="text-lg font-semibold">{item.name}</strong>
                 </div>
-                <span className="block text-sm text-archer-gray transition-colors group-hover:text-archer-white">
+                <span className="block text-sm text-archer-gray transition-colors">
                   {item.detail}
                 </span>
               </a>
